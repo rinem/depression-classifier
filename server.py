@@ -48,23 +48,21 @@ app = Flask(__name__)
 
 @app.route('/predict',methods=['POST'])
 def predict():
-	#Alternative Usage of Saved Model
-	# joblib.dump(clf, 'NB_spam_model.pkl')
-	# NB_spam_model = open('NB_spam_model.pkl','rb')
-	# clf = joblib.load(NB_spam_model)
     
     if request.method == 'POST':
-        message = request.form['message']
+        message = request.json['data']
         print(message)
         data = preProcess(message)
         my_prediction = int(loaded_model.predict(data))
         print(my_prediction)
+        result = {}
     if my_prediction == 0:
-        return "Neutral"
+        result['data'] = "Neutral"
     elif my_prediction == -1:
-        return "Negative"
+        result['data'] = "Negative"
     elif my_prediction == 1:
-        return "Positive"
+        result['data'] = "Positive"
+    return result
 
 if __name__ == '__main__':
 	app.run(debug=True)
