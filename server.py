@@ -13,6 +13,7 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import PorterStemmer
 from flask import Flask,render_template,url_for,request
 import dill as pickle
+import twint
 filename = 'model_v1.pk'
 
 with open(filename ,'rb') as f:
@@ -21,6 +22,9 @@ with open(filename ,'rb') as f:
 vectorizer = CountVectorizer(stop_words = 'english',ngram_range=(1,2))
 sw = set(stopwords.words('english'))
 ps = PorterStemmer()
+
+
+
 
 def clean(rev):    
     rev = rev.lower()
@@ -44,6 +48,23 @@ def preProcess(text):
     text = [clean(text)]
     return text
 
+def getTweets(user):
+    c = twint.Config()
+    c.Username = user
+    c.Store_object = True
+    c.Limit = 10
+    twint.run.Search(c)
+    tweets = twint.output.tweets_list
+    return tweets
+
+def getPred(user):
+    df = pd.read_csv(user+"1.csv")
+    df = df['tweet']
+    x = [preProcess(i) for i in df]
+    pred = model.predict(x)
+    return pred
+
+
 app = Flask(__name__)
 
 @app.route('/predict',methods=['POST'])
@@ -51,8 +72,10 @@ def predict():
     
     if request.method == 'POST':
         message = request.json['data']
+        m = getTweets(message)
         print(message)
         data = preProcess(message)
+
         my_prediction = int(loaded_model.predict(data))
         print(my_prediction)
         result = {}
